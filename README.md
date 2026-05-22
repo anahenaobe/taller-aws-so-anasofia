@@ -1,176 +1,388 @@
-# Taller AWS - Sistemas Operativos
+# Taller AWS - Sistemas Operativos 2026
 
-- Ana Sofía Henao Bedoya
+## Estudiante
+Ana Sofía
 
-El desarrollo incluye:
+---
 
-- Gestión de archivos con Amazon S3
-- Automatización mediante AWS CLI y boto3
-- Desarrollo de API REST con FastAPI
-- Despliegue de aplicaciones en Amazon EC2
-- Persistencia de datos con Amazon RDS
-- Contenerización utilizando Docker
-- Publicación de imágenes en Amazon ECR
-- Despliegue serverless mediante AWS Lambda
+# Descripción del Proyecto
 
-# Tecnologías utilizadas
+Este taller tiene como objetivo desplegar y configurar una aplicación FastAPI utilizando diferentes servicios de AWS:
 
-- Python
-- FastAPI
-- boto3
-- AWS CLI
-- Docker
-- GitHub
-- Amazon S3
 - Amazon EC2
 - Amazon RDS
+- Amazon S3
+- Docker
 - Amazon ECR
 - AWS Lambda
 
-# Estructura del proyecto
+La aplicación desarrollada permite:
 
-```bash
-.
-├── app
-│   ├── main.py
-│   ├── database
-│   ├── models
-│   ├── routes
-│   └── services
+- Crear tablas en una base de datos MySQL RDS
+- Subir imágenes a un bucket S3
+- Consultar imágenes almacenadas
+- Exponer endpoints mediante FastAPI
+- Documentar automáticamente la API usando Swagger
+
+---
+
+# Tecnologías Utilizadas
+
+- Python 3.11
+- FastAPI
+- Uvicorn
+- Boto3
+- MySQL
+- Docker
+- AWS EC2
+- AWS RDS
+- AWS S3
+- AWS ECR
+- AWS Lambda
+
+---
+
+# Estructura del Proyecto
+
+```txt
+TALLER-AWS-SO-ANASOFIA/
 │
-├── scripts
+├── app/
+│   ├── services/
+│   └── main.py
 │
-├── screenshots
-│   ├── s3
-│   ├── ec2
-│   ├── ecr
-│   ├── lambda
-│   └── rds
+├── screenshots/
+│   ├── ec2/
+│   ├── rds/
+│   ├── s3/
+│   ├── ecr/
+│   └── lambda/
+│
+├── scripts/
 │
 ├── Dockerfile
 ├── requirements.txt
-├── .gitignore
-└── README.md
+├── README.md
+└── .gitignore
 ```
 
-# Parte 1 - Gestión de archivos en Amazon S3
+---
 
-## Creación del bucket
+# Configuración del Entorno Local
 
-Se creó el bucket:
+## Crear entorno virtual
 
 ```bash
+python -m venv venv
+```
+
+## Activar entorno virtual
+
+### Windows
+
+```bash
+venv\Scripts\activate
+```
+
+### Linux/Mac
+
+```bash
+source venv/bin/activate
+```
+
+---
+
+# Instalación de Dependencias
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+# Ejecución Local
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Acceder desde el navegador:
+
+```txt
+http://127.0.0.1:8000/docs
+```
+
+---
+
+# Configuración de EC2
+
+Se creó una instancia EC2 Ubuntu para desplegar la aplicación FastAPI.
+
+## Configuraciones realizadas
+
+- Creación de instancia EC2
+- Configuración de Security Groups
+- Instalación de Python
+- Instalación de dependencias
+- Ejecución de Uvicorn
+- Configuración de systemd
+
+## Evidencias
+
+Las capturas se encuentran en:
+
+```txt
+screenshots/ec2/
+```
+
+---
+
+# Configuración de RDS
+
+Se configuró una base de datos MySQL utilizando Amazon RDS.
+
+## Configuraciones realizadas
+
+- Motor MySQL
+- Endpoint público habilitado
+- Configuración de Security Groups
+- Acceso desde EC2
+- Conexión mediante cliente MySQL
+
+## Endpoint RDS
+
+```txt
+fastapi-db.cr8aaywioydt.us-east-2.rds.amazonaws.com
+```
+
+## Evidencias
+
+Las capturas se encuentran en:
+
+```txt
+screenshots/rds/
+```
+
+---
+
+# Configuración de S3
+
+Se creó un bucket S3 para almacenar imágenes subidas desde la API.
+
+## Bucket utilizado
+
+```txt
 user-1040033706-ueia-so
 ```
 
-## Operaciones usando AWS CLI
+## Funcionalidades implementadas
 
-### Subida de archivos
+- Subida de imágenes
+- Consulta de imágenes
+- Organización por usuario
 
-```bash
-aws s3 cp a.txt s3://user-1040033706-ueia-so/
-aws s3 cp b.txt s3://user-1040033706-ueia-so/
-aws s3 cp c.txt s3://user-1040033706-ueia-so/
+## Evidencias
+
+Las capturas se encuentran en:
+
+```txt
+screenshots/s3/
 ```
 
-### Verificación de archivos
+---
 
-```bash
-aws s3 ls s3://user-1040033706-ueia-so/
+# Endpoints Implementados
+
+## GET /
+
+Endpoint principal para verificar el funcionamiento de la API.
+
+### Respuesta
+
+```json
+{
+  "mensaje": "Hola desde EC2 desde el repo"
+}
 ```
 
-### Descarga de archivos
+---
 
-```bash
-aws s3 cp s3://user-1040033706-ueia-so/ descarga_final/ --recursive
+## GET /create-table
+
+Crea la tabla de imágenes en MySQL.
+
+### Respuesta
+
+```json
+{
+  "mensaje": "Tabla creada correctamente"
+}
 ```
 
-### Manejo de múltiples archivos
+---
 
-Para la gestión de múltiples archivos se utilizaron comandos automatizados y la opción `--recursive`, permitiendo realizar cargas y descargas masivas de manera eficiente.
+## POST /upload
 
-## Operaciones usando boto3
+Sube una imagen al bucket S3 y registra la información en MySQL.
 
-Se desarrolló un script en Python utilizando boto3 para:
+### Parámetros
 
-- Crear archivos de prueba
-- Subir archivos automáticamente al bucket
-- Verificar los objetos almacenados
-- Descargar archivos en otra carpeta local
+| Parámetro | Tipo |
+|---|---|
+| usuario | string |
+| image | file |
 
-### Ejecución del script
+### Respuesta
 
-```bash
-python s3_test.py
+```json
+{
+  "mensaje": "Imagen subida correctamente"
+}
 ```
 
-# Parte 2 - Despliegue de FastAPI en Amazon EC2
+---
 
-Se realizó el despliegue de una aplicación FastAPI en una instancia EC2 utilizando Linux y configuraciones de red necesarias para permitir el acceso mediante IP pública.
+## GET /image
 
-## Actividades realizadas
+Consulta información de una imagen almacenada.
 
-- Creación de instancia EC2
-- Clonación del repositorio desde GitHub
-- Instalación de dependencias
-- Configuración de puertos y permisos
-- Ejecución de la aplicación FastAPI
-- Configuración de daemon/systemd
-- Configuración de Security Groups
+### Parámetros
 
-# Parte 3 - Desarrollo y despliegue de aplicación
+| Parámetro | Tipo |
+|---|---|
+| usuario | string |
+| image_name | string |
 
-La aplicación desarrollada permite:
+---
 
-## Endpoint POST
+# Dockerización
 
-- Recepción de usuario e imagen
-- Validación de formatos PNG/JPG/JPEG
-- Almacenamiento de imágenes en Amazon S3
-- Registro de información en Amazon RDS
+Se creó una imagen Docker para contenerizar la aplicación FastAPI.
 
-## Endpoint GET
-
-- Consulta de imágenes almacenadas
-- Obtención de URL prefirmada
-- Consulta de fecha de almacenamiento
-
-# Contenerización
-
-La aplicación fue contenerizada utilizando Docker.
-
-## Comandos utilizados
-
-### Construcción de imagen
+## Construcción de imagen
 
 ```bash
-docker build -t aws-fastapi .
+docker build -t fastapi-aws .
 ```
 
-### Ejecución del contenedor
+## Ejecución del contenedor
 
 ```bash
-docker run -p 8000:8000 aws-fastapi
+docker run -p 8000:8000 fastapi-aws
 ```
+
+---
 
 # Publicación en Amazon ECR
 
-Se creó un repositorio en Amazon ECR para almacenar la imagen Docker de la aplicación.
+Se creó un repositorio privado ECR llamado:
+
+```txt
+fastapi-aws
+```
+
+## Login en ECR
+
+```bash
+aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 023202273167.dkr.ecr.us-east-2.amazonaws.com
+```
+
+## Tag de la imagen
+
+```bash
+docker tag fastapi-aws:latest 023202273167.dkr.ecr.us-east-2.amazonaws.com/fastapi-aws:latest
+```
+
+## Push de la imagen
+
+```bash
+docker push 023202273167.dkr.ecr.us-east-2.amazonaws.com/fastapi-aws:latest
+```
+
+## Evidencias
+
+Las capturas se encuentran en:
+
+```txt
+screenshots/ecr/
+```
+
+---
 
 # Despliegue en AWS Lambda
 
-La aplicación fue desplegada utilizando AWS Lambda mediante imágenes almacenadas en Amazon ECR.
+Se creó una función Lambda utilizando la imagen Docker almacenada en ECR.
 
-También se configuró una URL pública para invocación.
+## Configuraciones realizadas
 
-# Evidencias
+- Creación de función Lambda
+- Asociación de imagen ECR
+- Configuración de Function URL
+- Integración con CloudWatch
 
-Las evidencias y capturas del desarrollo se encuentran almacenadas en:
+## Observaciones
 
-```bash
+La función Lambda fue creada correctamente y se logró asociar exitosamente con la imagen almacenada en Amazon ECR.
+
+Durante la fase final de ejecución se presentó un error relacionado con el runtime y el entrypoint del contenedor utilizado en Lambda. Sin embargo, se completaron satisfactoriamente las siguientes actividades:
+
+- Construcción de imagen Docker
+- Publicación en Amazon ECR
+- Creación de función Lambda
+- Configuración de URL pública
+- Integración con CloudWatch Logs
+
+## Evidencias
+
+Las capturas se encuentran en:
+
+```txt
+screenshots/lambda/
+```
+
+---
+
+# Evidencias del Taller
+
+Todas las capturas del proceso se encuentran organizadas en:
+
+```txt
 screenshots/
 ```
 
+Separadas por servicio:
+
+- ec2
+- rds
+- s3
+- ecr
+- lambda
+
+---
+
 # Repositorio GitHub
 
-El proyecto completo, incluyendo código fuente, scripts, Dockerfile, configuraciones y documentación, se encuentra versionado en GitHub.
+Repositorio utilizado para el desarrollo del taller:
+
+```txt
+https://github.com/TU-USUARIO/taller-aws-so-anasofia
+```
+
+---
+
+# Conclusiones
+
+- Se logró desplegar una aplicación FastAPI utilizando diferentes servicios AWS.
+- Se integró almacenamiento S3 con base de datos MySQL RDS.
+- Se realizó contenerización mediante Docker.
+- Se publicó la imagen Docker en Amazon ECR.
+- Se creó una función Lambda utilizando imágenes de contenedor.
+- Se documentó todo el proceso mediante capturas de pantalla.
+
+---
+
+# Autor
+
+Ana Sofía  
+Sistemas Operativos - Taller AWS 2026  
+Universidad EIA
